@@ -160,7 +160,7 @@
 
     @media (max-width: 600px) {
       .button-zone {
-        height: 280px;
+        height: 320px;
       }
     }
 
@@ -195,7 +195,7 @@
     }
 
     #yesBtn {
-      left: 8%;
+      left: 18%;
       background: linear-gradient(135deg, var(--yes), var(--accent));
       color: #fff;
       animation: pulse 1.5s ease-in-out infinite;
@@ -203,8 +203,9 @@
 
     @media (max-width: 600px) {
       #yesBtn {
-        left: 5%;
-        top: 35%;
+        left: 50%;
+        top: 25%;
+        transform: translate(-50%, -50%);
       }
     }
     
@@ -227,7 +228,8 @@
     @media (max-width: 600px) {
       #noBtn {
         left: 50%;
-        top: 65%;
+        top: 75%;
+        transform: translate(-50%, -50%);
       }
     }
 
@@ -469,7 +471,12 @@
     let yesScale = 1;
     function growYes() {
       yesScale = Math.min(2.4, yesScale + 0.12);
-      yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
+      const isMobile = window.innerWidth <= 600;
+      if (isMobile) {
+        yesBtn.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
+      } else {
+        yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
+      }
     }
 
     /* ---------- NO BUTTON RUNS AWAY ---------- */
@@ -480,6 +487,7 @@
     function moveNo(px, py) {
       const z = zone.getBoundingClientRect();
       const b = noBtn.getBoundingClientRect();
+      const y = yesBtn.getBoundingClientRect();
 
       let dx = (b.left + b.width / 2) - px;
       let dy = (b.top + b.height / 2) - py;
@@ -487,11 +495,56 @@
       dx /= mag;
       dy /= mag;
 
-      let newLeft = (b.left - z.left) + dx * 220;
-      let newTop  = (b.top - z.top) + dy * 220;
+      let newLeft = (b.left - z.left) + dx * 250;
+      let newTop  = (b.top - z.top) + dy * 250;
 
       newLeft = clamp(newLeft, 0, z.width - b.width);
       newTop  = clamp(newTop, 0, z.height - b.height);
+
+      // Calculate distance between No button and Yes button
+      const yesCenter = {
+        x: y.left - z.left + y.width / 2,
+        y: y.top - z.top + y.height / 2
+      };
+      
+      const noCenter = {
+        x: newLeft + b.width / 2,
+        y: newTop + b.height / 2
+      };
+
+      const distanceToYes = Math.hypot(noCenter.x - yesCenter.x, noCenter.y - yesCenter.y);
+      
+      // Larger minimum distance on mobile
+      const isMobile = window.innerWidth <= 600;
+      const minDistance = isMobile ? 180 : 150;
+
+      // If No button is too close to Yes button, push it away further
+      if (distanceToYes < minDistance) {
+        const angle = Math.atan2(noCenter.y - yesCenter.y, noCenter.x - yesCenter.x);
+        newLeft = yesCenter.x + Math.cos(angle) * minDistance - b.width / 2;
+        newTop = yesCenter.y + Math.sin(angle) * minDistance - b.height / 2;
+        
+        // Clamp again after adjustment
+        newLeft = clamp(newLeft, 0, z.width - b.width);
+        newTop = clamp(newTop, 0, z.height - b.height);
+        
+        // Double check - if still too close, move to opposite corner
+        const finalNoCenter = {
+          x: newLeft + b.width / 2,
+          y: newTop + b.height / 2
+        };
+        const finalDistance = Math.hypot(finalNoCenter.x - yesCenter.x, finalNoCenter.y - yesCenter.y);
+        
+        if (finalDistance < minDistance) {
+          // Force to bottom if Yes is at top, or top if Yes is at bottom
+          if (yesCenter.y < z.height / 2) {
+            newTop = z.height - b.height - 10;
+          } else {
+            newTop = 10;
+          }
+          newLeft = clamp(Math.random() * (z.width - b.width), 0, z.width - b.width);
+        }
+      }
 
       noBtn.style.left = newLeft + "px";
       noBtn.style.top = newTop + "px";
