@@ -467,16 +467,10 @@
       }, 400);
     }
 
-    /* ---------- YES BUTTON GROWS ---------- */
-    let yesScale = 1;
+    /* ---------- YES BUTTON STAYS NORMAL SIZE ---------- */
     function growYes() {
-      yesScale = Math.min(2.4, yesScale + 0.12);
-      const isMobile = window.innerWidth <= 600;
-      if (isMobile) {
-        yesBtn.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
-      } else {
-        yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
-      }
+      // Removed growing functionality - Yes button stays normal size
+      return;
     }
 
     /* ---------- NO BUTTON RUNS AWAY ---------- */
@@ -514,9 +508,9 @@
 
       const distanceToYes = Math.hypot(noCenter.x - yesCenter.x, noCenter.y - yesCenter.y);
       
-      // Larger minimum distance on mobile
+      // Much larger minimum distance to keep buttons completely separate
       const isMobile = window.innerWidth <= 600;
-      const minDistance = isMobile ? 180 : 150;
+      const minDistance = isMobile ? 200 : 180;
 
       // If No button is too close to Yes button, push it away further
       if (distanceToYes < minDistance) {
@@ -528,7 +522,7 @@
         newLeft = clamp(newLeft, 0, z.width - b.width);
         newTop = clamp(newTop, 0, z.height - b.height);
         
-        // Double check - if still too close, move to opposite corner
+        // Triple check - if still too close, force to safe position
         const finalNoCenter = {
           x: newLeft + b.width / 2,
           y: newTop + b.height / 2
@@ -536,13 +530,20 @@
         const finalDistance = Math.hypot(finalNoCenter.x - yesCenter.x, finalNoCenter.y - yesCenter.y);
         
         if (finalDistance < minDistance) {
-          // Force to bottom if Yes is at top, or top if Yes is at bottom
+          // Force to opposite vertical position with maximum distance
           if (yesCenter.y < z.height / 2) {
+            // Yes is at top, force No to bottom
             newTop = z.height - b.height - 10;
           } else {
+            // Yes is at bottom, force No to top
             newTop = 10;
           }
-          newLeft = clamp(Math.random() * (z.width - b.width), 0, z.width - b.width);
+          // Random horizontal position far from Yes
+          if (yesCenter.x < z.width / 2) {
+            newLeft = z.width - b.width - 10;
+          } else {
+            newLeft = 10;
+          }
         }
       }
 
