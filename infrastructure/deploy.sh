@@ -353,7 +353,8 @@ echo "  API deployed at: ${API_URL}"
 echo ""
 echo "[Step 7/8] Deploying frontend..."
 
-sed -i "s|YOUR_API_GATEWAY_URL_HERE|${API_URL}|g" frontend/src/app.js
+cp -r frontend/ frontend_deploy/
+sed -i "s|YOUR_API_GATEWAY_URL_HERE|${API_URL}|g" frontend_deploy/src/app.js
 
 aws s3 website "s3://${FRONTEND_BUCKET}" \
     --index-document index.html \
@@ -383,20 +384,22 @@ aws s3api put-bucket-policy \
     --policy "$BUCKET_POLICY" \
     --region "$AWS_REGION"
 
-aws s3 sync frontend/ "s3://${FRONTEND_BUCKET}/" \
+aws s3 sync frontend_deploy/ "s3://${FRONTEND_BUCKET}/" \
     --region "$AWS_REGION" \
     --content-type "text/html" \
     --exclude "*" --include "*.html"
 
-aws s3 sync frontend/ "s3://${FRONTEND_BUCKET}/" \
+aws s3 sync frontend_deploy/ "s3://${FRONTEND_BUCKET}/" \
     --region "$AWS_REGION" \
     --content-type "text/css" \
     --exclude "*" --include "*.css"
 
-aws s3 sync frontend/ "s3://${FRONTEND_BUCKET}/" \
+aws s3 sync frontend_deploy/ "s3://${FRONTEND_BUCKET}/" \
     --region "$AWS_REGION" \
     --content-type "application/javascript" \
     --exclude "*" --include "*.js"
+
+rm -rf frontend_deploy/
 
 FRONTEND_URL="http://${FRONTEND_BUCKET}.s3-website-${AWS_REGION}.amazonaws.com"
 echo "  Frontend deployed at: ${FRONTEND_URL}"
