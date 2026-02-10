@@ -1,0 +1,80 @@
+[
+    {
+        "ruleId": "rule-001",
+        "name": "Refund Policy",
+        "category": "billing",
+        "keywords": ["refund", "money back", "return", "reimburse"],
+        "response": "Our refund policy allows returns within 30 days of purchase. I can process a refund up to $100 automatically. For larger amounts, I'll need to escalate to a supervisor.",
+        "action": "refund",
+        "priority": "high",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-002",
+        "name": "Password Reset",
+        "category": "account",
+        "keywords": ["password", "reset", "login", "locked out", "forgot password"],
+        "response": "I can help you reset your password. I'll send a secure reset link to your registered email address.",
+        "action": "reset_password",
+        "priority": "medium",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-003",
+        "name": "Order Tracking",
+        "category": "orders",
+        "keywords": ["shipping", "delivery", "track", "where is my order", "order status"],
+        "response": "I can look up your order status. Standard shipping takes 3-5 business days, and express shipping takes 1-2 business days.",
+        "priority": "low",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-004",
+        "name": "Subscription Cancellation",
+        "category": "account",
+        "keywords": ["cancel", "unsubscribe", "close account", "stop subscription", "end membership"],
+        "response": "Subscription cancellations require manager approval for security purposes. I'll create an escalation ticket for you.",
+        "action": "cancel_subscription",
+        "priority": "high",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-005",
+        "name": "Technical Support",
+        "category": "technical",
+        "keywords": ["bug", "error", "not working", "broken", "crash", "issue"],
+        "response": "I'm sorry you're experiencing technical difficulties. Let me create a support ticket for our engineering team.",
+        "action": "escalate",
+        "priority": "medium",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-006",
+        "name": "Billing Inquiry",
+        "category": "billing",
+        "keywords": ["charge", "bill", "invoice", "payment", "overcharged"],
+        "response": "I can help you review your billing details and recent charges. Let me pull up your account information.",
+        "priority": "medium",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-007",
+        "name": "Goodwill Credit",
+        "category": "billing",
+        "keywords": ["credit", "compensation", "goodwill", "sorry", "make it right"],
+        "response": "I can apply a goodwill credit to your account (up to $50) as a gesture of appreciation for your patience.",
+        "action": "account_credit",
+        "priority": "medium",
+        "isActive": true
+    },
+    {
+        "ruleId": "rule-008",
+        "name": "Human Agent Escalation",
+        "category": "escalation",
+        "keywords": ["manager", "supervisor", "human", "real person", "speak to someone", "escalate"],
+        "response": "I understand you'd like to speak with a human agent. Let me connect you right away.",
+        "action": "escalate",
+        "priority": "high",
+        "isActive": true
+    }
+]

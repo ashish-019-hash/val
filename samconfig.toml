@@ -1,0 +1,13 @@
+# GeeksGreeks Support Copilot - SAM Configuration
+# Update these values after first deployment
+
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "geeksgreeks-copilot-dev"
+resolve_s3 = true
+s3_prefix = "geeksgreeks-copilot"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "Stage=dev AdminEmail=admin@example.com"
+confirm_changeset = false

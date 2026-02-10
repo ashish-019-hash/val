@@ -1,0 +1,26 @@
+[
+    {
+        "userId": "user-001",
+        "email": "john.doe@example.com",
+        "name": "John Doe",
+        "plan": "premium",
+        "status": "active",
+        "joinedAt": 1700000000
+    },
+    {
+        "userId": "user-002",
+        "email": "jane.smith@example.com",
+        "name": "Jane Smith",
+        "plan": "basic",
+        "status": "active",
+        "joinedAt": 1705000000
+    },
+    {
+        "userId": "user-003",
+        "email": "bob.wilson@example.com",
+        "name": "Bob Wilson",
+        "plan": "enterprise",
+        "status": "active",
+        "joinedAt": 1695000000
+    }
+]
