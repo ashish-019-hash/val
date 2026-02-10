@@ -1,0 +1,52 @@
+{
+    "faqs": [
+        {
+            "question": "What is your refund policy?",
+            "answer": "We offer a 30-day money-back guarantee on all purchases. To request a refund, contact our support team with your order number. Refunds are processed within 3-5 business days and credited to your original payment method.",
+            "category": "billing",
+            "keywords": ["refund", "money back", "return", "guarantee"]
+        },
+        {
+            "question": "How do I reset my password?",
+            "answer": "To reset your password: 1) Go to the login page. 2) Click 'Forgot Password'. 3) Enter your registered email. 4) Check your email for a reset link. 5) Click the link and set a new password. The link expires in 24 hours.",
+            "category": "account",
+            "keywords": ["password", "reset", "login", "forgot"]
+        },
+        {
+            "question": "How can I track my order?",
+            "answer": "You can track your order by: 1) Logging into your account. 2) Going to 'My Orders'. 3) Clicking on the order number. 4) You'll see the current status and tracking information. You'll also receive email updates at each stage.",
+            "category": "orders",
+            "keywords": ["track", "order", "shipping", "delivery", "where is my order"]
+        },
+        {
+            "question": "How do I cancel my subscription?",
+            "answer": "To cancel your subscription, please contact our support team. Cancellations require a brief review to ensure there are no pending charges. Your access continues until the end of the current billing period. We also offer plan downgrades as an alternative.",
+            "category": "account",
+            "keywords": ["cancel", "subscription", "unsubscribe", "stop"]
+        },
+        {
+            "question": "What payment methods do you accept?",
+            "answer": "We accept: Visa, Mastercard, American Express, Discover, PayPal, Apple Pay, Google Pay, and bank transfers for enterprise accounts. All payments are secured with industry-standard encryption.",
+            "category": "billing",
+            "keywords": ["payment", "pay", "credit card", "debit", "method"]
+        },
+        {
+            "question": "How do I contact support?",
+            "answer": "You can reach our support team through: 1) This AI chat (available 24/7). 2) Email: support@geeksgreeks.com. 3) Phone: 1-800-GEEKS (weekdays 9AM-6PM EST). 4) Help Center: help.geeksgreeks.com.",
+            "category": "general",
+            "keywords": ["contact", "support", "help", "reach", "phone", "email"]
+        },
+        {
+            "question": "What are your business hours?",
+            "answer": "Our AI support is available 24/7. Live agent support hours: Monday-Friday 9AM-9PM EST, Saturday-Sunday 10AM-6PM EST. Holiday hours may vary.",
+            "category": "general",
+            "keywords": ["hours", "open", "available", "business hours", "working hours"]
+        },
+        {
+            "question": "How do I update my account information?",
+            "answer": "To update your account: 1) Log into your account. 2) Go to 'Profile Settings'. 3) Update your name, email, phone, or address. 4) Click 'Save Changes'. For email changes, you'll need to verify the new email address.",
+            "category": "account",
+            "keywords": ["update", "change", "profile", "account", "information", "address"]
+        }
+    ]
+}

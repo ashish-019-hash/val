@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeeksGreeks - Admin Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23ff9900'/><text x='50%25' y='55%25' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23232f3e' font-weight='bold'>GG</text></svg>">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="navbar-brand">
+            <div class="logo">GG</div>
+            <span>GeeksGreeks Admin</span>
+        </div>
+        <div class="navbar-nav">
+            <a href="index.html">Chat</a>
+            <a href="admin.html" class="active">Admin Panel</a>
+        </div>
+        <div class="navbar-user">
+            <div class="avatar">A</div>
+            <span>Admin</span>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Support Dashboard</h1>
+            <button class="btn btn-primary" onclick="showAddRuleModal()">+ Add Rule</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Rules</div>
+                <div class="stat-value" id="stat-total-rules">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Rules</div>
+                <div class="stat-value" id="stat-active-rules">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Open Escalations</div>
+                <div class="stat-value" id="stat-open-escalations">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Resolved</div>
+                <div class="stat-value" id="stat-resolved">--</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="rules" onclick="switchTab('rules')">Support Rules</div>
+            <div class="tab" data-tab="escalations" onclick="switchTab('escalations')">Escalations</div>
+        </div>
+
+        <div id="rules-section">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Support Rules</h3>
+                    <div>
+                        <button class="btn btn-sm btn-outline" onclick="loadRules()">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Keywords</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rules-table-body">
+                            <tr><td colspan="6"><div class="loading-spinner"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="escalations-section" style="display:none">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Escalations</h3>
+                    <div>
+                        <button class="btn btn-sm btn-outline" onclick="loadEscalations()">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Reason</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="escalations-table-body">
+                            <tr><td colspan="6"><div class="loading-spinner"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="rule-modal">
+        <div class="modal">
+            <h2 id="modal-title">Add New Rule</h2>
+            <form id="rule-form" onsubmit="event.preventDefault(); saveRule();">
+                <input type="hidden" id="rule-id-field">
+                <div class="form-group">
+                    <label>Rule Name *</label>
+                    <input type="text" id="rule-name" placeholder="e.g., Refund Policy" required>
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="rule-category" required>
+                        <option value="">Select category</option>
+                        <option value="billing">Billing</option>
+                        <option value="account">Account</option>
+                        <option value="orders">Orders</option>
+                        <option value="technical">Technical</option>
+                        <option value="escalation">Escalation</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Keywords * (comma-separated)</label>
+                    <input type="text" id="rule-keywords" placeholder="refund, money back, return" required>
+                </div>
+                <div class="form-group">
+                    <label>Response Template *</label>
+                    <textarea id="rule-response" placeholder="The response the AI should use when this rule matches..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Action (optional)</label>
+                    <select id="rule-action">
+                        <option value="">No action</option>
+                        <option value="refund">Process Refund</option>
+                        <option value="reset_password">Reset Password</option>
+                        <option value="update_case">Update Case</option>
+                        <option value="escalate">Escalate to Agent</option>
+                        <option value="cancel_subscription">Cancel Subscription</option>
+                        <option value="account_credit">Apply Account Credit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="rule-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px">
+                        <input type="checkbox" id="rule-active" checked>
+                        Active
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeRuleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

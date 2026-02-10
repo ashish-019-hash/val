@@ -1,0 +1,432 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: GeeksGreeks - Agentic Support Copilot (Hackathon Prototype)
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.12
+    MemorySize: 256
+    Environment:
+      Variables:
+        RULES_TABLE: !Ref RulesTable
+        SESSIONS_TABLE: !Ref SessionsTable
+        USERS_TABLE: !Ref UsersTable
+        ESCALATIONS_TABLE: !Ref EscalationsTable
+        KNOWLEDGE_BASE_BUCKET: !Ref KnowledgeBaseBucket
+        BEDROCK_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0"
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+  AdminEmail:
+    Type: String
+    Default: admin@example.com
+    Description: Email for escalation notifications
+
+Resources:
+
+  # ==================== COGNITO ====================
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub geeksgreeks-users-${Stage}
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: name
+          Required: false
+          Mutable: true
+        - Name: custom:role
+          AttributeDataType: String
+          Mutable: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub geeksgreeks-web-client-${Stage}
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+  # ==================== API GATEWAY ====================
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub geeksgreeks-api-${Stage}
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+        AddDefaultAuthorizerToCorsPreflight: false
+
+  # ==================== LAMBDA FUNCTIONS ====================
+  ChatHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub geeksgreeks-chat-handler-${Stage}
+      CodeUri: backend/chat_handler/
+      Handler: app.lambda_handler
+      Description: Main chatbot brain - handles customer queries
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RulesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EscalationsTable
+        - S3ReadPolicy:
+            BucketName: !Ref KnowledgeBaseBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - comprehend:DetectSentiment
+                - comprehend:DetectEntities
+              Resource: "*"
+      Events:
+        ChatPost:
+          Type: Api
+          Properties:
+            Path: /chat
+            Method: post
+            RestApiId: !Ref ApiGateway
+        ChatHistory:
+          Type: Api
+          Properties:
+            Path: /chat/history
+            Method: get
+            RestApiId: !Ref ApiGateway
+
+  RulesAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub geeksgreeks-rules-admin-${Stage}
+      CodeUri: backend/rules_admin/
+      Handler: app.lambda_handler
+      Description: Admin panel - manage support rules and workflows
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RulesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EscalationsTable
+      Events:
+        GetRules:
+          Type: Api
+          Properties:
+            Path: /rules
+            Method: get
+            RestApiId: !Ref ApiGateway
+        CreateRule:
+          Type: Api
+          Properties:
+            Path: /rules
+            Method: post
+            RestApiId: !Ref ApiGateway
+        UpdateRule:
+          Type: Api
+          Properties:
+            Path: /rules/{ruleId}
+            Method: put
+            RestApiId: !Ref ApiGateway
+        DeleteRule:
+          Type: Api
+          Properties:
+            Path: /rules/{ruleId}
+            Method: delete
+            RestApiId: !Ref ApiGateway
+        GetEscalations:
+          Type: Api
+          Properties:
+            Path: /escalations
+            Method: get
+            RestApiId: !Ref ApiGateway
+        UpdateEscalation:
+          Type: Api
+          Properties:
+            Path: /escalations/{escalationId}
+            Method: put
+            RestApiId: !Ref ApiGateway
+
+  EscalationNotifierFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub geeksgreeks-escalation-notifier-${Stage}
+      CodeUri: backend/escalation_notifier/
+      Handler: app.lambda_handler
+      Description: Sends notifications when escalations are created
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref EscalationTopic
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref EscalationsTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt EscalationTopic.TopicName
+      Events:
+        EscalationStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt EscalationsTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 1
+            FilterCriteria:
+              Filters:
+                - Pattern: '{"eventName": ["INSERT"]}'
+
+  HealthCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub geeksgreeks-health-${Stage}
+      CodeUri: backend/chat_handler/
+      Handler: app.health_check
+      Description: Health check endpoint
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+            RestApiId: !Ref ApiGateway
+            Auth:
+              Authorizer: NONE
+
+  # ==================== DYNAMODB TABLES ====================
+  RulesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub geeksgreeks-rules-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ruleId
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ruleId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: category-index
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub geeksgreeks-sessions-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sessionId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sessionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: userId-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub geeksgreeks-users-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  EscalationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub geeksgreeks-escalations-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: escalationId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: escalationId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  # ==================== S3 BUCKETS ====================
+  KnowledgeBaseBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub geeksgreeks-knowledge-base-${Stage}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub geeksgreeks-frontend-${Stage}-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+
+  # ==================== CLOUDFRONT ====================
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub geeksgreeks-oac-${Stage}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  # ==================== SNS ====================
+  EscalationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub geeksgreeks-escalations-${Stage}
+      DisplayName: GeeksGreeks Escalation Notifications
+
+  EscalationSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref EscalationTopic
+      Protocol: email
+      Endpoint: !Ref AdminEmail
+
+  # ==================== CLOUDWATCH ====================
+  ChatHandlerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/geeksgreeks-chat-handler-${Stage}
+      RetentionInDays: 14
+
+  RulesAdminLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/geeksgreeks-rules-admin-${Stage}
+      RetentionInDays: 14
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+  CloudFrontUrl:
+    Description: CloudFront distribution URL (your website)
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+  FrontendBucketName:
+    Description: S3 bucket for frontend files
+    Value: !Ref FrontendBucket
+  KnowledgeBaseBucketName:
+    Description: S3 bucket for knowledge base documents
+    Value: !Ref KnowledgeBaseBucket
