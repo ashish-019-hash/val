@@ -1,0 +1,23 @@
+REFUND POLICY
+
+Eligibility:
+- Refund requests must be made within 30 days of purchase
+- Items must be unused and in original condition
+- Digital products are non-refundable after download
+
+Refund Process:
+1. Customer initiates refund request
+2. System validates order eligibility (within 30 days, not already refunded)
+3. If amount <= $50: Auto-approve refund
+4. If amount > $50 and <= $200: Require single approval
+5. If amount > $200: Require manager approval (escalate)
+
+Refund Timeline:
+- Credit Card: 5-7 business days
+- UPI/Net Banking: 3-5 business days
+- Cash on Delivery: 7-10 business days (bank transfer)
+
+Guardrails:
+- Maximum 3 refunds per customer per month
+- Maximum single refund amount: $500
+- Flagged accounts require manual review

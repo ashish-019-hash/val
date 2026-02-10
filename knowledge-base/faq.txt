@@ -1,0 +1,23 @@
+Q: How do I request a refund?
+A: You can request a refund within 30 days of purchase. Go to your order history, select the order, and click "Request Refund". Refunds are processed within 5-7 business days.
+
+Q: How do I reset my password?
+A: Click "Forgot Password" on the login page. Enter your registered email. You'll receive a reset link within 5 minutes. The link expires after 24 hours.
+
+Q: What are your business hours?
+A: Our support team is available Monday to Friday, 9 AM to 6 PM IST. For urgent issues, our AI assistant is available 24/7.
+
+Q: How do I track my order?
+A: Go to "My Orders" in your account dashboard. Click on the order number to see real-time tracking information. You'll also receive email updates at each stage.
+
+Q: What is your return policy?
+A: Items can be returned within 15 days of delivery. Items must be unused and in original packaging. Refund will be processed to the original payment method.
+
+Q: How do I contact a human agent?
+A: If the AI assistant cannot resolve your issue, it will automatically escalate to a human agent. You can also type "talk to agent" at any time.
+
+Q: How do I update my shipping address?
+A: Go to Account Settings > Addresses. Click "Edit" next to the address you want to change. Note: You cannot change the address for orders already shipped.
+
+Q: What payment methods do you accept?
+A: We accept Visa, MasterCard, UPI, Net Banking, and Cash on Delivery (COD) for eligible orders.
