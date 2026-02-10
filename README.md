@@ -30,7 +30,7 @@ agentic-support-copilot/
     rules_admin.py         # Admin rules management Lambda
     requirements.txt       # Python dependencies
   frontend/
-    public/index.html      # Chat UI
+    index.html             # Chat UI
     src/app.js             # Frontend logic
     src/styles.css         # Styling
   knowledge-base/
