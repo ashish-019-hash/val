@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Copilot - AI Customer Support</title>
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">&#x1f916;</div>
+                <div>
+                    <h1>Support Copilot</h1>
+                    <span class="subtitle">AI-Powered Customer Support</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="status-badge online">Online</span>
+                <button id="adminToggle" class="btn btn-secondary">Admin Panel</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div id="chatPanel" class="chat-panel">
+                <div class="chat-header">
+                    <h2>Chat with AI Assistant</h2>
+                    <button id="newChat" class="btn btn-small">New Chat</button>
+                </div>
+
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message bot">
+                        <div class="message-avatar">&#x1f916;</div>
+                        <div class="message-content">
+                            <p>Hello! I'm your AI Support Copilot. I can help you with:</p>
+                            <ul>
+                                <li>Order tracking and status</li>
+                                <li>Refund requests</li>
+                                <li>Password resets</li>
+                                <li>General questions</li>
+                            </ul>
+                            <p>How can I assist you today?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="sendQuickMessage('I want a refund')">Refund Request</button>
+                        <button class="quick-btn" onclick="sendQuickMessage('How do I reset my password?')">Password Reset</button>
+                        <button class="quick-btn" onclick="sendQuickMessage('Track my order')">Track Order</button>
+                        <button class="quick-btn" onclick="sendQuickMessage('Talk to agent')">Talk to Agent</button>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
+                        <button id="sendBtn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminPanel" class="admin-panel hidden">
+                <div class="admin-header">
+                    <h2>Admin - Workflow Rules</h2>
+                    <button id="backToChat" class="btn btn-small">Back to Chat</button>
+                </div>
+
+                <div class="admin-content">
+                    <div class="rule-form">
+                        <h3>Add New Rule</h3>
+                        <div class="form-group">
+                            <label for="ruleName">Rule Name</label>
+                            <input type="text" id="ruleName" placeholder="e.g., Auto-Refund Small Orders">
+                        </div>
+                        <div class="form-group">
+                            <label for="ruleAction">Action Type</label>
+                            <select id="ruleAction">
+                                <option value="refund">Refund</option>
+                                <option value="password_reset">Password Reset</option>
+                                <option value="order_cancel">Order Cancellation</option>
+                                <option value="escalate">Escalate to Agent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ruleCondition">Condition</label>
+                            <input type="text" id="ruleCondition" placeholder="e.g., amount <= 50">
+                        </div>
+                        <div class="form-group">
+                            <label for="ruleMaxAmount">Max Amount ($)</label>
+                            <input type="number" id="ruleMaxAmount" placeholder="50">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ruleAutoApprove"> Auto-Approve
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="addRule()">Add Rule</button>
+                    </div>
+
+                    <div class="rules-list">
+                        <h3>Existing Rules</h3>
+                        <div id="rulesList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/app.js"></script>
+</body>
+</html>
